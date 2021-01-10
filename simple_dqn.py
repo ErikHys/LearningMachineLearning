@@ -19,3 +19,26 @@ class ReplayBuffer(object):
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state
         self.new_state_memory[index] = state_
+        self.reward_memory[index] = reward
+        self.terminal_memory[index] = 1 - int(done)
+        if self.discrete:
+            actions = np.zeros(self.action_memory.shape[1])
+            actions[action] = 1.0
+            self.action_memory[index] = actions
+        else:
+            self.action_memory[index] = action
+        self.mem_cntr += 1
+
+    def sample_buffer(self, batch_size):
+        max_mem = min(self.mem_cntr, self.mem_size)
+        batch = np.random.choice(max_mem, batch_size)
+
+        states = self.state_memory[batch]
+        states_ = self.new_state_memory[batch]
+        rewards = self.reward_memory[batch]
+        actions = self.action_memory[batch]
+        terminal = self.terminal_memory[batch]
+
+        return states, actions, rewards, states_, terminal
+
+
