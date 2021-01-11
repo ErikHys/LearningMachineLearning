@@ -69,7 +69,7 @@ class Agent(object):
 
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions, discrete=True)
 
-        self.q_eval = build_dqn(alpha, n_actions, input_dims, 256, 256)
+        self.q_eval = build_dqn(alpha, n_actions, input_dims, 32, 256)
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)

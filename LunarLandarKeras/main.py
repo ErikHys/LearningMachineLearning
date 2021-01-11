@@ -1,4 +1,4 @@
-from simple_dqn import Agent
+from LunarLandarKeras.simple_dqn import Agent
 import numpy as np
 from utils import plotLearning
 import gym
