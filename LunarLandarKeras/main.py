@@ -1,4 +1,4 @@
-from LunarLandarKeras.simple_dqn import Agent
+from agents.simple_dqn import Agent
 import numpy as np
 from utils import plotLearning
 import gym
@@ -17,7 +17,7 @@ if __name__ == '__main__':
         score = 0
         observation = env.reset()
         while not done:
-            env.render()
+            # env.render()
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action)
             score += reward

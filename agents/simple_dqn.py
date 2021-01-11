@@ -1,6 +1,7 @@
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.losses import categorical_crossentropy
 
 import numpy as np
 
@@ -10,8 +11,8 @@ class ReplayBuffer(object):
         self.mem_size = max_size
         self.input_shape = input_shape
         self.discrete = discrete
-        self.state_memory = np.zeros((self.mem_size, input_shape))
-        self.new_state_memory = np.zeros((self.mem_size, input_shape))
+        self.state_memory = np.zeros((self.mem_size, input_shape[0], input_shape[1], input_shape[2]))
+        self.new_state_memory = np.zeros((self.mem_size, input_shape[0], input_shape[1], input_shape[2]))
         dtype = np.int8 if self.discrete else np.float32
         self.action_memory = np.zeros((self.mem_size, n_actions), dtype=dtype)
         self.reward_memory = np.zeros(self.mem_size)
@@ -55,9 +56,23 @@ def build_dqn(lr, n_actions, input_dims, fc1_dims, fc2_dims):
     return model
 
 
+def build_cnn_dqn(lr, n_actions, input_dims):
+    model = Sequential([
+        Conv2D(32, (6, 6), activation='relu', kernel_initializer='he_uniform', input_shape=input_dims),
+        MaxPool2D((4, 4)),
+        Flatten(),
+        Dense(n_actions, activation='softmax')
+    ])
+
+    model.compile(optimizer=SGD(learning_rate=lr, momentum=0.9),
+                  loss=categorical_crossentropy,
+                  metrics=['accuracy'])
+    return model
+
+
 class Agent(object):
     def __init__(self, alpha, gamma, n_actions, epsilon, batch_size, input_dims, epsilon_dec=0.996, epsilon_end=0.01,
-                 mem_size=1000000, fname='dqn_model.h5'):
+                 mem_size=1000000, fname='dqn_model.h5', cnn=False):
         self.action_space = [i for i in range(n_actions)]
         self.n_actions = n_actions
         self.gamma = gamma
@@ -68,8 +83,10 @@ class Agent(object):
         self.model_file = fname
 
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions, discrete=True)
-
-        self.q_eval = build_dqn(alpha, n_actions, input_dims, 32, 256)
+        if cnn:
+            self.q_eval = build_cnn_dqn(alpha, n_actions, input_dims)
+        else:
+            self.q_eval = build_dqn(alpha, n_actions, input_dims, 32, 32)
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -82,6 +99,16 @@ class Agent(object):
         else:
             actions = self.q_eval.predict(state)
             action = np.argmax(actions)
+        return action
+
+    def choose_car_action(self, state):
+        state = state[np.newaxis, :]
+        rand = np.random.random()
+        if rand < self.epsilon:
+            action = np.array([np.random.random(1), np.random.random(1), np.random.random(1)]).flatten()
+        else:
+            actions = self.q_eval.predict(state)
+            action = actions
         return action
 
     def learn(self):
