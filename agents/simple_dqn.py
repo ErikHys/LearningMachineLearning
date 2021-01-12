@@ -11,8 +11,8 @@ class ReplayBuffer(object):
         self.mem_size = max_size
         self.input_shape = input_shape
         self.discrete = discrete
-        self.state_memory = np.zeros((self.mem_size, input_shape[0], input_shape[1], input_shape[2]))
-        self.new_state_memory = np.zeros((self.mem_size, input_shape[0], input_shape[1], input_shape[2]))
+        self.state_memory = np.zeros((self.mem_size, input_shape))
+        self.new_state_memory = np.zeros((self.mem_size, input_shape))
         dtype = np.int8 if self.discrete else np.float32
         self.action_memory = np.zeros((self.mem_size, n_actions), dtype=dtype)
         self.reward_memory = np.zeros(self.mem_size)
@@ -125,7 +125,8 @@ class Agent(object):
         q_target = q_eval.copy()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-
+        print(batch_index)
+        print(action_indices)
         q_target[batch_index, action_indices] = reward + self.gamma*np.max(q_next, axis=1)*done
 
         _ = self.q_eval.fit(state, q_target, verbose=0)

@@ -17,7 +17,7 @@ if __name__ == '__main__':
         score = 0
         observation = env.reset()
         while not done:
-            # env.render()
+            # env.render()  #Use this if you want to render graphics
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action)
             score += reward

@@ -9,7 +9,7 @@ def run():
     n_games = 500
     agent = agents.simple_dqn.Agent(gamma=0.99, epsilon=1.0, alpha=0.0005, input_dims=(96, 96, 3), n_actions=3,
                                     mem_size=10000, batch_size=64,
-                                    epsilon_end=0.01, cnn=True)
+                                    epsilon_end=0.01, cnn=True, discrete=False)
 
     scores = []
     eps_history = []
